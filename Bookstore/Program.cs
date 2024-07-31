@@ -1,3 +1,4 @@
+using AutoMapper;
 using FluentValidation.AspNetCore;
 using Bookstore.Profiles;
 using Bookstore.Validations;
