@@ -1,0 +1,8 @@
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.csproj.AssemblyReference.cache
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.GeneratedMSBuildEditorConfig.editorconfig
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.AssemblyInfoInputs.cache
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.AssemblyInfo.cs
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.csproj.CoreCompileInputs.cache
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.MvcApplicationPartsAssemblyInfo.cs
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.MvcApplicationPartsAssemblyInfo.cache
+/Users/ksensazli/RiderProjects/Week4/Bookstore/obj/Debug/net8.0/Bookstore.sourcelink.json
