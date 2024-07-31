@@ -1,5 +1,5 @@
 using Bookstore.Data;
-using Bookstore.Model;
+using Bookstore.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bookstore.Controllers;

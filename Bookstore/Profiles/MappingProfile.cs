@@ -1,6 +1,6 @@
 using AutoMapper;
 using Bookstore.DTOs;
-using Bookstore.Model;
+using Bookstore.Entities;
 
 namespace Bookstore.Profiles;
 

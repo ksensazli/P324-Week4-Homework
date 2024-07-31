@@ -1,7 +1,7 @@
 using AutoMapper;
 using Bookstore.Data;
 using Bookstore.DTOs;
-using Bookstore.Model;
+using Bookstore.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bookstore.Controllers;

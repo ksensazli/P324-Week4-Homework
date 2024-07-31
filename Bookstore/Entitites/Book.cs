@@ -1,4 +1,4 @@
-namespace Bookstore.Model;
+namespace Bookstore.Entities;
 
 public class Book
 {

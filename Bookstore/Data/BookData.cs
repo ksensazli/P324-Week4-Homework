@@ -1,4 +1,4 @@
-using Bookstore.Model;
+using Bookstore.Entities;
 
 namespace Bookstore.Data;
 
