@@ -2,6 +2,10 @@ using AutoMapper;
 using Bookstore.Data;
 using Bookstore.DTOs;
 using Bookstore.Entities;
+using Bookstore.Operations.AuthorOperations;
+using Bookstore.UnitOfWork;
+using Bookstore.Validations.AuthorValidations;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bookstore.Controllers;
@@ -10,77 +14,68 @@ namespace Bookstore.Controllers;
 [Route("[controller]s")]
 public class AuthorController : ControllerBase
 {
-    private static List<Author> AuthorList = new List<Author>()
-    {
-        new Author { Id = 1, FirstName = "Frank", LastName = "Herbert", BirthDate = new DateTime(1920, 10, 8) },
-        new Author { Id = 2, FirstName = "Miyamoto", LastName = "Musashi", BirthDate = new DateTime(1584, 3, 12) },
-        new Author { Id = 3, FirstName = "Marcus", LastName = "Aurelius", BirthDate = new DateTime(121, 4, 26) }
-    };
-
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public AuthorController(IMapper mapper)
+    public AuthorController(IUnitOfWork unitOfWork, IMapper mapper)
     {
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     [HttpGet]
-    public IActionResult GetAuthors()
+    public async Task<IActionResult> GetAll()
     {
-        var authors = _mapper.Map<List<AuthorDto>>(AuthorList);
-        return Ok(authors);
+        var query = new GetAuthorsQuery(_unitOfWork, _mapper);
+        var result = await query.Handle();
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetAuthorById(int id)
+    public async Task<IActionResult> GetById(int id)
     {
-        var author = AuthorList.SingleOrDefault(a => a.Id == id);
-        if (author == null)
-        {
-            return NotFound();
-        }
-        var authorDto = _mapper.Map<AuthorDto>(author);
-        return Ok(authorDto);
+        var query = new GetAuthorDetailQuery(_unitOfWork, _mapper) { AuthorId = id };
+
+        var validator = new GetAuthorDetailQueryValidator();
+        await validator.ValidateAndThrowAsync(query);
+
+        var result = await query.Handle();
+        return Ok(result);
     }
 
     [HttpPost]
-    public IActionResult AddAuthor([FromBody] AuthorCreateDto newAuthor)
+    public async Task<IActionResult> CreateAuthor([FromBody] AuthorCreateDto newAuthor)
     {
-        var author = _mapper.Map<Author>(newAuthor);
-        author.Id = AuthorList.Max(a => a.Id) + 1;
-        AuthorList.Add(author);
-        return CreatedAtAction(nameof(GetAuthorById), new { id = author.Id }, author);
+        var command = new CreateAuthorCommand(_unitOfWork, _mapper) { Model = newAuthor };
+
+        var validator = new CreateAuthorCommandValidator();
+        validator.ValidateAndThrow(command);
+
+        await command.Handle();
+        return Ok($"{newAuthor.FullName} has been saved successfully.");
     }
 
     [HttpPut("{id}")]
-    public IActionResult UpdateAuthor(int id, [FromBody] AuthorUpdateDto updatedAuthor)
+    public async Task<IActionResult> UpdateAuthor(int id, [FromBody] AuthorUpdateDto updatedAuthor)
     {
-        var author = AuthorList.SingleOrDefault(a => a.Id == id);
-        if (author == null)
-        {
-            return NotFound();
-        }
+        var command = new UpdateAuthorCommand(_unitOfWork) { AuthorId = id, Model = updatedAuthor };
 
-        _mapper.Map(updatedAuthor, author);
-        return NoContent();
+        var validator = new UpdateAuthorCommandValidator();
+        validator.ValidateAndThrow(command);
+
+        await command.Handle();
+        return Ok($"{updatedAuthor.FullName} updated successfully.");
     }
 
     [HttpDelete("{id}")]
-    public IActionResult DeleteAuthor(int id)
+    public async Task<IActionResult> DeleteAuthor(int id)
     {
-        var author = AuthorList.SingleOrDefault(a => a.Id == id);
-        if (author == null)
-        {
-            return NotFound();
-        }
+        var command = new DeleteAuthorCommand(_unitOfWork) { AuthorId = id };
 
-        var hasBooks = BookData.BookList.Any(b => b.AuthorId == id);
-        if (hasBooks)
-        {
-            return BadRequest("Kitabı yayında olan bir yazar silinemez.");
-        }
+        var validator = new DeleteAuthorCommandValidator();
+        validator.ValidateAndThrow(command);
 
-        AuthorList.Remove(author);
-        return NoContent();
+        await command.Handle();
+        return Ok("Author deleted successfully.");
     }
 }

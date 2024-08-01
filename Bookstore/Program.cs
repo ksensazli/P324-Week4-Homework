@@ -1,29 +1,37 @@
-using AutoMapper;
-using FluentValidation.AspNetCore;
-using Bookstore.Profiles;
-using Bookstore.Validations;
+using Bookstore.Context;
+using Bookstore.Middleware;
+using Bookstore.Services;
+using Bookstore.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers()
-    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AuthorCreateValidator>());
+builder.Services.AddControllers();
 
-// AutoMapper configuration
-//builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<ILoggerService,ConsoleLogger>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseCustomExceptionMiddle();
+
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    DataGenerator.Initialize(services);
+}
 app.Run();

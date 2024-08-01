@@ -1,5 +1,13 @@
+using AutoMapper;
+using Bookstore.Context;
 using Bookstore.Data;
+using Bookstore.DTOs.BookDTOs;
 using Bookstore.Entities;
+using Bookstore.Operations.BookOperations;
+using Bookstore.UnitOfWork;
+using Bookstore.Validations.BookValidations;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bookstore.Controllers;
@@ -8,59 +16,83 @@ namespace Bookstore.Controllers;
 [Route("[controller]s")]
 public class BookController : ControllerBase
 {
-	[HttpGet]
-	public List<Book> GetBooks()
-	{
-		return BookData.BookList.OrderBy(x => x.Id).ToList<Book>();
-	}
+    private readonly AppDbContext _context;
+    private readonly IMapper mapper;
+    private readonly IUnitOfWork unitOfWork;
 
-	[HttpGet("{id}")]
-	public Book GetById(int id)
-	{
-		return BookData.BookList.Where(book => book.Id == id).SingleOrDefault();
-	}
+    public BookController(AppDbContext context, IMapper mapper,IUnitOfWork unitOfWork)
+    {
+        _context = context;
+        this.mapper = mapper;
+        this.unitOfWork = unitOfWork;
+    }
 
-	[HttpPost]
-	public IActionResult AddBook([FromBody] Book newBook)
-	{
-		if ((BookData.BookList.Find(x => x.Title == newBook.Title)) is not null)
-		{
-			return BadRequest();
-		}
-		BookData.BookList.Add(newBook);
-		return Ok();
-	}
+    [HttpGet]
+    public async Task<IActionResult> GetBooks()
+    {
+        GetBooksQuery query =  new GetBooksQuery(mapper,unitOfWork);
+        var result = await query.Handle();
+        return Ok(result);
+    }
 
-	[HttpPut("{id}")]
-	public IActionResult UpdateBook(int id, [FromBody] Book updatedBook)
-	{
-		var book = BookData.BookList.Find(x => x.Id == id);
-		if (book is null)
-		{
-			return BadRequest();
-		}
+    //FromRoute
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
 
-		book.GenreId = updatedBook.GenreId != default ? updatedBook.GenreId : book.GenreId;
-		book.AuthorId = updatedBook.AuthorId != default ? updatedBook.AuthorId : book.AuthorId;
-		book.PageCount = updatedBook.PageCount != default ? updatedBook.PageCount : book.PageCount;
-		book.Title = updatedBook.Title != default ? updatedBook.Title : book.Title;
-		book.PublishDate = updatedBook.PublishDate != default ? updatedBook.PublishDate : book.PublishDate;
+        BookDto result;
+        GetBookDetailQuery query = new GetBookDetailQuery(mapper,unitOfWork);
+        query.BookId = id;
 
-		return Ok();
-	}
+        GetBookDetailQueryValidator validator = new();
+        validator.ValidateAndThrow(query);
 
-	[HttpDelete("{id}")]
-	public IActionResult DeleteBook(int id)
-	{
-		var book = BookData.BookList.Find(x => x.Id == id);
+        result = await query.Handle();
 
-		if (book is null)
-		{
-			return BadRequest();
-		}
+        return Ok(result);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> AddBook([FromBody] BookCreateDto newBook)
+    {
+        CreateBookCommand command = new CreateBookCommand(mapper,unitOfWork) {Model=newBook};
 
-		BookData.BookList.Remove(book);
+        command.Model = newBook;
+        CreateBookCommandValidator validator = new();
+        ValidationResult result= validator.Validate(command);
+        validator.ValidateAndThrow(command);
+        await command.Handle();
 
-		return Ok();
-	}
+        return Ok($"{newBook.Title} has saved successfully.");
+    }
+
+    [HttpPut("{id}")]
+    public async  Task<IActionResult> UpdateBook(int id, [FromBody] BookUpdateDto updatedBook)
+    {
+        UpdateBookCommand command = new UpdateBookCommand(unitOfWork);
+        command.BookId = id;
+        command.Model = updatedBook;
+
+        UpdateBookCommandValidator validator= new();
+        validator.ValidateAndThrow(command);
+
+        await command.Handle();
+
+        return Ok($"{updatedBook.Title} updated successfully");
+
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteBook(int id)
+    {
+        DeleteBookCommand command = new DeleteBookCommand(unitOfWork);
+        command.BookId = id;
+
+        DeleteBookCommandValidator validator=new();
+        validator.ValidateAndThrow(command);
+
+        await command.Handle();
+
+        return Ok("Bookd deleted successfully.");
+    }
 }
