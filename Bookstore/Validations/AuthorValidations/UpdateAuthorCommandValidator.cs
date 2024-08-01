@@ -11,7 +11,7 @@ public class UpdateAuthorCommandValidator : AbstractValidator<UpdateAuthorComman
             .GreaterThan(0).WithMessage("Author ID must be greater than zero.");
 
         RuleFor(command => command.Model)
-            .NotNull().WithMessage("UpdateAuthorDTO model is required.");
+            .NotNull().WithMessage("AuthorUpdateDto model is required.");
 
         RuleFor(command => command.Model.FullName)
             .NotEmpty().WithMessage("Author name cannot be empty.")

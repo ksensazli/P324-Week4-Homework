@@ -11,7 +11,7 @@ public class UpdateGenreCommandValidator : AbstractValidator<UpdateGenreCommand>
             .GreaterThan(0).WithMessage("Genre ID must be greater than zero.");
 
         RuleFor(command => command.Model)
-            .NotNull().WithMessage("UpdateGenreDTO model is required.");
+            .NotNull().WithMessage("GenreUpdateDto model is required.");
 
         RuleFor(command => command.Model.Name)
             .NotEmpty().WithMessage("Genre name is required.")

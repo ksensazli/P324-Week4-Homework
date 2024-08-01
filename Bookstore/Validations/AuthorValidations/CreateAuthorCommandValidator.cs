@@ -8,7 +8,7 @@ public class CreateAuthorCommandValidator : AbstractValidator<CreateAuthorComman
     public CreateAuthorCommandValidator()
     {
         RuleFor(command => command.Model)
-            .NotNull().WithMessage("CreateAuthorDTO model is required.");
+            .NotNull().WithMessage("AuthorCreateDto model is required.");
 
         RuleFor(command => command.Model.FullName)
             .NotEmpty().WithMessage("Author name is required.")
